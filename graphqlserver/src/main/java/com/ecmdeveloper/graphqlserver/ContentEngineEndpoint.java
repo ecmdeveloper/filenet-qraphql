@@ -22,7 +22,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
+import com.ecmdeveloper.graphqlserver.schema.ContainerSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.ContentEngineSchemaBuilder;
+import com.ecmdeveloper.graphqlserver.schema.ContentSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.datafetcher.FolderDataFetcher;
 import com.ecmdeveloper.graphqlserver.datafetcher.ObjectStoresDataFetcher;
 import com.filenet.api.core.Connection;
@@ -96,24 +98,22 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 		   
 	       Domain domain = Factory.Domain.fetchInstance(connection, null, null);
 		   ObjectStore objectStore = Factory.ObjectStore.fetchInstance(domain, "TARGET", null);
-	
-			Builder subFolders = newFieldDefinition().name("subFolders").type(GraphQLList.list(new GraphQLTypeReference("Folder")))
-					.dataFetcher(  context -> asStream(((Folder)context.getSource()).get_SubFolders() ).collect(Collectors.toList()));
-			
-			GraphQLObjectType folderType = ContentEngineSchemaBuilder.newObject(objectStore).withClass("Folder")
-					.field(subFolders)
+
+		   	GraphQLObjectType documentType = ContentSchemaBuilder.newObject(objectStore).withClass("Document").build();
+			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass("Folder")
 					.build();
-		   
+
+			GraphQLArgument pathArgument = newArgument()
+				      .name("path")
+				      .type(new GraphQLNonNull(GraphQLString))
+				      .build();
+			
 			GraphQLObjectType queryType = newObject()
 	                .name("query")
-	                
-	                .field( newFieldDefinition().name("folder").type(folderType).argument(newArgument()
-	                	      .name("path")
-	                	      .type(new GraphQLNonNull(GraphQLString))
-	                	      .build())
+	                .field( newFieldDefinition().name("folder").type(folderType).argument(pathArgument)
 	                          .dataFetcher( new FolderDataFetcher() )
 	                	      )
-	                
+	                .field(newFieldDefinition().name("document").type(documentType).argument(pathArgument))
 	                .description("The object store object")
 	                .build();	   
 	

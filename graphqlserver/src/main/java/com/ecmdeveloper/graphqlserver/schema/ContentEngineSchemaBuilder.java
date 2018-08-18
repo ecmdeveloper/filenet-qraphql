@@ -28,14 +28,10 @@ import graphql.schema.GraphQLObjectType.Builder;
  * @author Ricardo Belfor
  *
  */
-public class ContentEngineSchemaBuilder extends Builder {
+public abstract class ContentEngineSchemaBuilder extends Builder {
 
 	private ObjectStore objectStore;
 
-    public static ContentEngineSchemaBuilder newObject(ObjectStore objectStore) {
-        return new ContentEngineSchemaBuilder(objectStore);
-    }	
-    
 	public ContentEngineSchemaBuilder(ObjectStore objectStore) {
 		this.objectStore = objectStore;
 	}
