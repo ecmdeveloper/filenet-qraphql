@@ -26,6 +26,7 @@ import com.ecmdeveloper.graphqlserver.schema.ContainerSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.ContentEngineSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.ContentSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.datafetcher.FolderDataFetcher;
+import com.ecmdeveloper.graphqlserver.datafetcher.IndependentObjectDataFetcher;
 import com.ecmdeveloper.graphqlserver.datafetcher.ObjectStoresDataFetcher;
 import com.filenet.api.core.Connection;
 import com.filenet.api.core.Domain;
@@ -34,6 +35,7 @@ import com.filenet.api.core.Folder;
 import com.filenet.api.core.ObjectStore;
 import com.filenet.api.util.UserContext;
 
+import graphql.Scalars;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition.Builder;
@@ -100,20 +102,32 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 		   ObjectStore objectStore = Factory.ObjectStore.fetchInstance(domain, "TARGET", null);
 
 		   	GraphQLObjectType documentType = ContentSchemaBuilder.newObject(objectStore).withClass("Document").build();
-			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass("Folder")
-					.build();
+			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass("Folder").build();
 
 			GraphQLArgument pathArgument = newArgument()
 				      .name("path")
-				      .type(new GraphQLNonNull(GraphQLString))
+				      .type(GraphQLString)
+				      .build();
+
+			GraphQLArgument idArgument = newArgument()
+				      .name("Id")
+				      .type( Scalars.GraphQLID )
 				      .build();
 			
 			GraphQLObjectType queryType = newObject()
 	                .name("query")
-	                .field( newFieldDefinition().name("folder").type(folderType).argument(pathArgument)
-	                          .dataFetcher( new FolderDataFetcher() )
+	                .field( newFieldDefinition()
+	                		.name("folder")
+	                		.type(folderType)
+	                		.argument(pathArgument)
+	                		.argument(idArgument)
+	                        .dataFetcher( new IndependentObjectDataFetcher("Folder") )
 	                	      )
-	                .field(newFieldDefinition().name("document").type(documentType).argument(pathArgument))
+	                .field(newFieldDefinition()
+	                		.name("document")
+	                		.type(documentType)
+	                		.argument(idArgument)
+	                		.dataFetcher( new IndependentObjectDataFetcher("Document") ) )
 	                .description("The object store object")
 	                .build();	   
 	
@@ -135,10 +149,8 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 	                .build();	   		
 			System.err.println( "Generating schema done...");
 			
-			return GraphQLSchema.newSchema()
-	        .query(queryType)
-	        .mutation(mutationType)
-	        .build();
+			return GraphQLSchema.newSchema().query(queryType).mutation(mutationType).build();
+			
        } finally {
     	   UserContext.get().popSubject();
        }

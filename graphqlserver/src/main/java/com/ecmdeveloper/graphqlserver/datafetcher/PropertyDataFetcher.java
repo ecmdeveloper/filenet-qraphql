@@ -6,6 +6,7 @@ package com.ecmdeveloper.graphqlserver.datafetcher;
 import com.filenet.api.core.EngineObject;
 import com.filenet.api.core.ObjectStore;
 import com.filenet.api.property.Property;
+import com.filenet.api.property.PropertyId;
 import com.filenet.api.property.PropertyString;
 
 import graphql.schema.DataFetcher;
@@ -23,6 +24,7 @@ public class PropertyDataFetcher <T> implements DataFetcher<T> {
 		this.propertyName = propertyName;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public T get(DataFetchingEnvironment environment) {
 		
@@ -32,6 +34,8 @@ public class PropertyDataFetcher <T> implements DataFetcher<T> {
         Property property = source.getProperties().get(propertyName);
         if ( property instanceof PropertyString) {
         	return (T) property.getStringValue(); 
+        } else if (property instanceof PropertyId) {
+        	return (T) property.getIdValue().toString();
         }
         return (T) source.getProperties().getObjectValue(propertyName);
 	}
