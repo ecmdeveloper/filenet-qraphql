@@ -3,13 +3,17 @@
  */
 package com.ecmdeveloper.graphqlserver.schema;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import static com.ecmdeveloper.graphqlserver.utils.CEAPIStreams.asStream;
 import static graphql.Scalars.GraphQLBoolean;
-import static graphql.Scalars.GraphQLString;
 import static graphql.Scalars.GraphQLID;
+import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
-
-import java.util.function.Consumer;
 
 import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
 import com.filenet.api.admin.ClassDefinition;
@@ -22,46 +26,34 @@ import com.filenet.api.core.Factory;
 import com.filenet.api.core.ObjectStore;
 
 import graphql.schema.GraphQLFieldDefinition;
-import graphql.schema.GraphQLObjectType.Builder;
 
 /**
  * @author Ricardo Belfor
  *
  */
-public abstract class ContentEngineSchemaBuilder extends Builder {
+public class SchemaClassDefinition {
 
-	private ObjectStore objectStore;
+	private final ObjectStore objectStore;
 
-	public ContentEngineSchemaBuilder(ObjectStore objectStore) {
+	public SchemaClassDefinition(ObjectStore objectStore) {
 		this.objectStore = objectStore;
 	}
-
-	public ContentEngineSchemaBuilder withClass2(String className) {
-		
-		SchemaClassDefinition classDefinition = new SchemaClassDefinition(objectStore);
-		fields( classDefinition.getFieldDefinitions(className) );
-		return this;
-	}
 	
-	public ContentEngineSchemaBuilder withClass(String className) {
-
-		ClassDefinition classDefinition = Factory.ClassDefinition.fetchInstance(objectStore, className, null);
+	public List<GraphQLFieldDefinition> getFieldDefinitions(String className) {
 		
+		ClassDefinition classDefinition = Factory.ClassDefinition.fetchInstance(objectStore, className, null);
 		PropertyDefinitionList propertyDefinitions = classDefinition.get_PropertyDefinitions();
 		
-		this.name(className);
-
-		Consumer<? super PropertyDefinition> action = p -> { 
+		Function<? super PropertyDefinition, GraphQLFieldDefinition > action2 = p -> { 
 			if ( p instanceof PropertyDefinitionString ||  p instanceof PropertyDefinitionId) {
-				this.field(getStringField(p));
+				return getStringField(p);
 			} else if (p instanceof PropertyDefinitionBoolean ) {
-				this.field(getBooleanField((PropertyDefinitionBoolean) p));
+				return getBooleanField((PropertyDefinitionBoolean) p);
 			}
+			return null;
 		};
 		
-		asStream(propertyDefinitions).forEach(action);
-		
-		return this;
+		return asStream(propertyDefinitions).map(action2).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	private GraphQLFieldDefinition getStringField(PropertyDefinition propertyDefinition) {

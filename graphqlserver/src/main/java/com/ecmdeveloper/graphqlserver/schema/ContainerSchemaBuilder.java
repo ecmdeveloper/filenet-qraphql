@@ -34,7 +34,7 @@ public class ContainerSchemaBuilder extends ContentEngineSchemaBuilder {
 
 		field( newFieldDefinition()
 				.name("containedDocuments")
-				.type(GraphQLList.list(new GraphQLTypeReference("Document")))
+				.type(GraphQLList.list(new GraphQLTypeReference("Content")))
 				.dataFetcher(  context -> asStream(((Folder)context.getSource()).get_ContainedDocuments() ).collect(Collectors.toList())));
 	}
 }

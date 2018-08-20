@@ -6,6 +6,8 @@ package com.ecmdeveloper.graphqlserver;
 import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
+import static graphql.schema.GraphQLInterfaceType.newInterface;
+
 import static graphql.schema.GraphQLObjectType.newObject;
 import static com.ecmdeveloper.graphqlserver.utils.CEAPIStreams.asStream;
 
@@ -25,6 +27,7 @@ import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
 import com.ecmdeveloper.graphqlserver.schema.ContainerSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.ContentEngineSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.ContentSchemaBuilder;
+import com.ecmdeveloper.graphqlserver.schema.SchemaClassDefinition;
 import com.ecmdeveloper.graphqlserver.datafetcher.FolderDataFetcher;
 import com.ecmdeveloper.graphqlserver.datafetcher.IndependentObjectDataFetcher;
 import com.ecmdeveloper.graphqlserver.datafetcher.ObjectStoresDataFetcher;
@@ -39,6 +42,7 @@ import graphql.Scalars;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition.Builder;
+import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
@@ -101,8 +105,25 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 	       Domain domain = Factory.Domain.fetchInstance(connection, null, null);
 		   ObjectStore objectStore = Factory.ObjectStore.fetchInstance(domain, "TARGET", null);
 
-		   	GraphQLObjectType documentType = ContentSchemaBuilder.newObject(objectStore).withClass("Document").build();
-			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass("Folder").build();
+		   SchemaClassDefinition classDefinition = new SchemaClassDefinition(objectStore);
+		   
+		   GraphQLInterfaceType contentInterface = newInterface()
+		   		.name("Content")
+		   		.fields( classDefinition.getFieldDefinitions("Document") )
+		   		.description("Acts as an abstract wrapper around all document classes")
+		   		.typeResolver( env -> (GraphQLObjectType) env.getSchema().getType("Document") ).build();
+		   
+		   	GraphQLObjectType documentType = ContentSchemaBuilder
+		   			.newObject(objectStore)
+		   			.withClass("Document")
+		   			.withInterface(contentInterface).build();
+
+		   	GraphQLObjectType emailType = ContentSchemaBuilder
+		   			.newObject(objectStore)
+		   			.withClass("Email")
+		   			.withInterface(contentInterface).build();
+		   	
+			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass2("Folder").name("Folder").build();
 
 			GraphQLArgument pathArgument = newArgument()
 				      .name("path")
@@ -123,11 +144,8 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 	                		.argument(idArgument)
 	                        .dataFetcher( new IndependentObjectDataFetcher("Folder") )
 	                	      )
-	                .field(newFieldDefinition()
-	                		.name("document")
-	                		.type(documentType)
-	                		.argument(idArgument)
-	                		.dataFetcher( new IndependentObjectDataFetcher("Document") ) )
+	                .field(getDocumentTypeAsField(documentType, idArgument) )
+	                .field(getDocumentTypeAsField(emailType, idArgument) )
 	                .description("The object store object")
 	                .build();	   
 	
@@ -155,6 +173,14 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
     	   UserContext.get().popSubject();
        }
    }
+
+private static Builder getDocumentTypeAsField(GraphQLObjectType documentType, GraphQLArgument idArgument) {
+	return newFieldDefinition()
+			.name(documentType.getName() )
+			.type(documentType)
+			.argument(idArgument)
+			.dataFetcher( new IndependentObjectDataFetcher(documentType.getName()) );
+}
    protected static Subject getBootstrapSubject() {
     	
 	   connection = Factory.Connection.getConnection(url);
