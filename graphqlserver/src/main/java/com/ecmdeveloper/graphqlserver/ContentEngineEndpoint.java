@@ -7,34 +7,28 @@ import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLArgument.newArgument;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLInterfaceType.newInterface;
-
 import static graphql.schema.GraphQLObjectType.newObject;
-import static com.ecmdeveloper.graphqlserver.utils.CEAPIStreams.asStream;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.security.auth.Subject;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
-import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
-import com.ecmdeveloper.graphqlserver.schema.ContainerSchemaBuilder;
-import com.ecmdeveloper.graphqlserver.schema.ContentEngineSchemaBuilder;
-import com.ecmdeveloper.graphqlserver.schema.ContentSchemaBuilder;
-import com.ecmdeveloper.graphqlserver.schema.SchemaClassDefinition;
-import com.ecmdeveloper.graphqlserver.datafetcher.FolderDataFetcher;
 import com.ecmdeveloper.graphqlserver.datafetcher.IndependentObjectDataFetcher;
 import com.ecmdeveloper.graphqlserver.datafetcher.ObjectStoresDataFetcher;
+import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
+import com.ecmdeveloper.graphqlserver.schema.ContainerSchemaBuilder;
+import com.ecmdeveloper.graphqlserver.schema.ContentSchemaBuilder;
+import com.ecmdeveloper.graphqlserver.schema.SchemaClassDefinition;
 import com.filenet.api.core.Connection;
 import com.filenet.api.core.Domain;
 import com.filenet.api.core.Factory;
-import com.filenet.api.core.Folder;
+import com.filenet.api.core.IndependentObject;
 import com.filenet.api.core.ObjectStore;
 import com.filenet.api.util.UserContext;
 
@@ -43,11 +37,9 @@ import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition.Builder;
 import graphql.schema.GraphQLInterfaceType;
-import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLTypeReference;
 import graphql.schema.StaticDataFetcher;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
@@ -74,26 +66,6 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 		super(buildDynamicSchema());
 		addListener(ContentEngineSessionManager.getListener());
 	}
-
-    private static GraphQLSchema buildSchema() {
-
-    	
-    	DataFetcher<List<String>> ObjectStoreDataFetcher = new StaticDataFetcher(Arrays.asList("Hi!", "Hello!") );
-    	DataFetcher<String> helloDataFetcher = new StaticDataFetcher("Hi!");
-    	
-		SchemaParser schemaParser = new SchemaParser();
-		SchemaGenerator schemaGenerator = new SchemaGenerator();
-
-		File schemaFile = new File("/Users/ricardobelfor/Documents/workspace-jee-luna-dojo/graphqlserver/src/main/resources/base-ce-schema.graphqls");
-
-		TypeDefinitionRegistry typeRegistry = schemaParser.parse(schemaFile);
-		RuntimeWiring wiring = RuntimeWiring.newRuntimeWiring()
-		    	.type("QueryType", typeWiring -> typeWiring.dataFetcher("objectStores", new ObjectStoresDataFetcher(connection) ))
-		    	.type("ObjectStore", typeWiring -> typeWiring.dataFetcher("name", new PropertyDataFetcher<String>("name")))
-		    	.build();
-
-		return schemaGenerator.makeExecutableSchema(typeRegistry, wiring);
-    }
     
    private static GraphQLSchema buildDynamicSchema() {
 	   
@@ -110,8 +82,18 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 		   GraphQLInterfaceType contentInterface = newInterface()
 		   		.name("Content")
 		   		.fields( classDefinition.getFieldDefinitions("Document") )
+		   		.field(newFieldDefinition().name("ClassName").type(GraphQLString) )
 		   		.description("Acts as an abstract wrapper around all document classes")
-		   		.typeResolver( env -> (GraphQLObjectType) env.getSchema().getType("Document") ).build();
+		   		.typeResolver( env -> {
+		   			String className = ((IndependentObject)env.getObject() ).getClassName();
+		   			GraphQLObjectType type = (GraphQLObjectType) env.getSchema().getType(className);
+		   			if ( type != null) {
+		   				System.out.println("Resolving to '" + type.getName() + "'");
+		   				return type;
+		   			}
+					return (GraphQLObjectType) env.getSchema().getType("Document");
+					
+		   		} ).build();
 		   
 		   	GraphQLObjectType documentType = ContentSchemaBuilder
 		   			.newObject(objectStore)
@@ -172,16 +154,17 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
        } finally {
     	   UserContext.get().popSubject();
        }
-   }
+   	}
 
-private static Builder getDocumentTypeAsField(GraphQLObjectType documentType, GraphQLArgument idArgument) {
-	return newFieldDefinition()
-			.name(documentType.getName() )
-			.type(documentType)
-			.argument(idArgument)
-			.dataFetcher( new IndependentObjectDataFetcher(documentType.getName()) );
-}
-   protected static Subject getBootstrapSubject() {
+	private static Builder getDocumentTypeAsField(GraphQLObjectType documentType, GraphQLArgument idArgument) {
+		return newFieldDefinition()
+				.name(documentType.getName() )
+				.type(documentType)
+				.argument(idArgument)
+				.dataFetcher( new IndependentObjectDataFetcher(documentType.getName()) );
+	}
+
+	protected static Subject getBootstrapSubject() {
     	
 	   connection = Factory.Connection.getConnection(url);
        return UserContext.createSubject(connection, userName, password, null );

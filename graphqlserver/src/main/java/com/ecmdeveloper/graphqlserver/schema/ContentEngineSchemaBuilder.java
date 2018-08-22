@@ -19,6 +19,7 @@ import com.filenet.api.admin.PropertyDefinitionId;
 import com.filenet.api.admin.PropertyDefinitionString;
 import com.filenet.api.collection.PropertyDefinitionList;
 import com.filenet.api.core.Factory;
+import com.filenet.api.core.IndependentObject;
 import com.filenet.api.core.ObjectStore;
 
 import graphql.schema.GraphQLFieldDefinition;
@@ -34,6 +35,12 @@ public abstract class ContentEngineSchemaBuilder extends Builder {
 
 	public ContentEngineSchemaBuilder(ObjectStore objectStore) {
 		this.objectStore = objectStore;
+		
+   		field(newFieldDefinition()
+   				.name("ClassName")
+   				.type(GraphQLString)
+   				.dataFetcher( env -> ((IndependentObject)env.getSource() ).getClassName() ) );
+
 	}
 
 	public ContentEngineSchemaBuilder withClass2(String className) {
