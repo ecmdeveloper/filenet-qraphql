@@ -25,7 +25,7 @@ public class PropertyDataFetcher <T> implements DataFetcher<T> {
 
 	private String propertyName;
 
-	public PropertyDataFetcher(String propertyName) {
+	PropertyDataFetcher(String propertyName) {
 		this.propertyName = propertyName;
 	}
 
