@@ -21,11 +21,11 @@ import graphql.schema.DataFetchingEnvironment;
  * @author Ricardo Belfor
  *
  */
-public class PropertyDataFetcher <T> implements DataFetcher<T> {
+public class PropertyListDataFetcher <T> implements DataFetcher<T> {
 
 	private String propertyName;
 
-	public PropertyDataFetcher(String propertyName) {
+	public PropertyListDataFetcher(String propertyName) {
 		this.propertyName = propertyName;
 	}
 
@@ -37,11 +37,11 @@ public class PropertyDataFetcher <T> implements DataFetcher<T> {
         if (source == null) return null;
 
         Property property = source.getProperties().get(propertyName);
-        if ( property instanceof PropertyString) {
-        	return (T) property.getStringValue(); 
-        } else if (property instanceof PropertyId) {
-        	return (T) property.getIdValue().toString();
+        
+        if ( property instanceof PropertyStringList) {
+        	return (T) asStream(property.getStringListValue()).collect(Collectors.toList());
         }
+     
         return (T) source.getProperties().getObjectValue(propertyName);
 	}
 

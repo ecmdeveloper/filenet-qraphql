@@ -105,7 +105,7 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 		   			.withClass("Email")
 		   			.withInterface(contentInterface).build();
 		   	
-			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass2("Folder").name("Folder").build();
+			GraphQLObjectType folderType = ContainerSchemaBuilder.newObject(objectStore).withClass("Folder").name("Folder").build();
 
 			GraphQLArgument pathArgument = newArgument()
 				      .name("path")

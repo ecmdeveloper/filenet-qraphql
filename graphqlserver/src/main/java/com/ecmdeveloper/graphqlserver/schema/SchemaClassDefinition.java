@@ -16,16 +16,19 @@ import static graphql.Scalars.GraphQLString;
 import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 
 import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
+import com.ecmdeveloper.graphqlserver.datafetcher.PropertyListDataFetcher;
 import com.filenet.api.admin.ClassDefinition;
 import com.filenet.api.admin.PropertyDefinition;
 import com.filenet.api.admin.PropertyDefinitionBoolean;
 import com.filenet.api.admin.PropertyDefinitionId;
 import com.filenet.api.admin.PropertyDefinitionString;
 import com.filenet.api.collection.PropertyDefinitionList;
+import com.filenet.api.constants.Cardinality;
 import com.filenet.api.core.Factory;
 import com.filenet.api.core.ObjectStore;
 
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLList;
 
 /**
  * @author Ricardo Belfor
@@ -44,16 +47,29 @@ public class SchemaClassDefinition {
 		ClassDefinition classDefinition = Factory.ClassDefinition.fetchInstance(objectStore, className, null);
 		PropertyDefinitionList propertyDefinitions = classDefinition.get_PropertyDefinitions();
 		
-		Function<? super PropertyDefinition, GraphQLFieldDefinition > action2 = p -> { 
-			if ( p instanceof PropertyDefinitionString ||  p instanceof PropertyDefinitionId) {
-				return getStringField(p);
+		Function<? super PropertyDefinition, GraphQLFieldDefinition > action = p -> {
+			if ( p instanceof PropertyDefinitionString || p instanceof PropertyDefinitionId) {
+				if ( p.get_Cardinality().equals(Cardinality.SINGLE ) ) {
+					return getStringField(p);
+				} else {
+					return getStringListField(p);
+				}
 			} else if (p instanceof PropertyDefinitionBoolean ) {
 				return getBooleanField((PropertyDefinitionBoolean) p);
 			}
 			return null;
 		};
 		
-		return asStream(propertyDefinitions).map(action2).filter(Objects::nonNull).collect(Collectors.toList());
+		return asStream(propertyDefinitions).map(action).filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
+	private GraphQLFieldDefinition getStringListField(PropertyDefinition propertyDefinition) {
+		return newFieldDefinition()
+		        .name(propertyDefinition.get_SymbolicName() )
+		        .description(propertyDefinition.get_DisplayName())
+		        .type(GraphQLList.list(propertyDefinition instanceof PropertyDefinitionId? GraphQLID :GraphQLString) )
+		        .dataFetcher( new PropertyListDataFetcher<List<String>>(propertyDefinition.get_SymbolicName() )) 
+		        .build();		
 	}
 
 	private GraphQLFieldDefinition getStringField(PropertyDefinition propertyDefinition) {

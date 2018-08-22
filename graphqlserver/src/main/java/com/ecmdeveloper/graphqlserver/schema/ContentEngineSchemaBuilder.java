@@ -43,49 +43,11 @@ public abstract class ContentEngineSchemaBuilder extends Builder {
 
 	}
 
-	public ContentEngineSchemaBuilder withClass2(String className) {
+	public ContentEngineSchemaBuilder withClass(String className) {
 		
+		name(className);
 		SchemaClassDefinition classDefinition = new SchemaClassDefinition(objectStore);
 		fields( classDefinition.getFieldDefinitions(className) );
 		return this;
-	}
-	
-	public ContentEngineSchemaBuilder withClass(String className) {
-
-		ClassDefinition classDefinition = Factory.ClassDefinition.fetchInstance(objectStore, className, null);
-		
-		PropertyDefinitionList propertyDefinitions = classDefinition.get_PropertyDefinitions();
-		
-		this.name(className);
-
-		Consumer<? super PropertyDefinition> action = p -> { 
-			if ( p instanceof PropertyDefinitionString ||  p instanceof PropertyDefinitionId) {
-				this.field(getStringField(p));
-			} else if (p instanceof PropertyDefinitionBoolean ) {
-				this.field(getBooleanField((PropertyDefinitionBoolean) p));
-			}
-		};
-		
-		asStream(propertyDefinitions).forEach(action);
-		
-		return this;
-	}
-
-	private GraphQLFieldDefinition getStringField(PropertyDefinition propertyDefinition) {
-		return newFieldDefinition()
-        .name(propertyDefinition.get_SymbolicName() )
-        .description(propertyDefinition.get_DisplayName())
-        .type(propertyDefinition instanceof PropertyDefinitionId? GraphQLID :GraphQLString)
-        .dataFetcher( new PropertyDataFetcher<String>(propertyDefinition.get_SymbolicName() )) 
-        .build();
-	}
-
-	private GraphQLFieldDefinition getBooleanField(PropertyDefinitionBoolean propertyDefinition) {
-		return newFieldDefinition()
-        .name(propertyDefinition.get_SymbolicName() )
-        .description(propertyDefinition.get_DisplayName())
-        .type(GraphQLBoolean)
-        .dataFetcher( new PropertyDataFetcher<Boolean>(propertyDefinition.get_SymbolicName() )) 
-        .build();
 	}
 }
