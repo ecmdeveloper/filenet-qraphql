@@ -30,6 +30,7 @@ import com.filenet.api.core.ObjectStore;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLOutputType;
+import graphql.schema.GraphQLScalarType;
 
 /**
  * @author Ricardo Belfor
@@ -37,6 +38,7 @@ import graphql.schema.GraphQLOutputType;
  */
 public class SchemaClassDefinition {
 
+	public static GraphQLScalarType GraphQLDate = new com.ecmdeveloper.graphqlserver.scalars.GraphQLDateTime();
 	private final ObjectStore objectStore;
 
 	public SchemaClassDefinition(ObjectStore objectStore) {
@@ -84,6 +86,9 @@ public class SchemaClassDefinition {
 			break;
 		case TypeID.LONG_AS_INT:
 			outputType = Optional.of(GraphQLLong);
+			break;
+		case TypeID.DATE_AS_INT:
+			outputType = Optional.of(GraphQLDate);
 			break;
 		}
 		
