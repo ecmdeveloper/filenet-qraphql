@@ -12,7 +12,7 @@ import com.filenet.api.constants.TypeID;
 import graphql.schema.DataFetcher;
 
 /**
- * @author ricardobelfor
+ * @author Ricardo Belfor
  *
  */
 public class PropertyDataFetcherFactory {
@@ -20,6 +20,18 @@ public class PropertyDataFetcherFactory {
 	public static DataFetcher<?> get(PropertyDefinition p) {
 		
 		switch (p.get_DataType().getValue() ) {
+		case TypeID.DOUBLE_AS_INT:
+			if (p.get_Cardinality().equals(Cardinality.SINGLE )) {
+				return new PropertyDataFetcher<Double>(p.get_SymbolicName() );
+			} else {
+				return new PropertyListDataFetcher<List<Double>>(p.get_SymbolicName() );
+			}
+		case TypeID.LONG_AS_INT:
+			if (p.get_Cardinality().equals(Cardinality.SINGLE )) {
+				return new PropertyDataFetcher<Integer>(p.get_SymbolicName() );
+			} else {
+				return new PropertyListDataFetcher<List<Integer>>(p.get_SymbolicName() );
+			}
 		case TypeID.BOOLEAN_AS_INT:
 			if (p.get_Cardinality().equals(Cardinality.SINGLE )) {
 				return new PropertyDataFetcher<Boolean>(p.get_SymbolicName() );
@@ -36,5 +48,4 @@ public class PropertyDataFetcherFactory {
 			}
 		}
 	}
-	
 }

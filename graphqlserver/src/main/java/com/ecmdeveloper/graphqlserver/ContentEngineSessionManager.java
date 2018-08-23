@@ -32,14 +32,12 @@ public class ContentEngineSessionManager {
 			@Override
 			public GraphQLServletListener.OperationCallback onOperation(GraphQLContext context, String operationName, String query, Map<String, Object> variables) {
 
-				System.out.println("onOperation() - " + operationName);
 				context.getSubject().ifPresent(subject -> UserContext.get().pushSubject(subject) );
 				
 				return new GraphQLServletListener.OperationCallback() {
 
 					@Override
 					public void onFinally(GraphQLContext context, String operationName, String query, Map<String, Object> variables, Object data) {
-						System.out.println("onFinally() - " + operationName);
 						context.getSubject().ifPresent( subject -> UserContext.get().popSubject() );
 					}
 				};
