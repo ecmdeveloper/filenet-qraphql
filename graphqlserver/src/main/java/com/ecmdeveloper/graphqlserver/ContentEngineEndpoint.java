@@ -9,9 +9,6 @@ import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLInterfaceType.newInterface;
 import static graphql.schema.GraphQLObjectType.newObject;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import javax.security.auth.Subject;
@@ -20,8 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ecmdeveloper.graphqlserver.datafetcher.IndependentObjectDataFetcher;
-import com.ecmdeveloper.graphqlserver.datafetcher.ObjectStoresDataFetcher;
-import com.ecmdeveloper.graphqlserver.datafetcher.PropertyDataFetcher;
 import com.ecmdeveloper.graphqlserver.schema.ContainerSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.ContentSchemaBuilder;
 import com.ecmdeveloper.graphqlserver.schema.SchemaClassDefinition;
@@ -33,18 +28,12 @@ import com.filenet.api.core.ObjectStore;
 import com.filenet.api.util.UserContext;
 
 import graphql.Scalars;
-import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLArgument;
 import graphql.schema.GraphQLFieldDefinition.Builder;
 import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.StaticDataFetcher;
-import graphql.schema.idl.RuntimeWiring;
-import graphql.schema.idl.SchemaGenerator;
-import graphql.schema.idl.SchemaParser;
-import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.servlet.GraphQLContext;
 import graphql.servlet.SimpleGraphQLServlet;
 
@@ -55,9 +44,10 @@ import graphql.servlet.SimpleGraphQLServlet;
 @WebServlet(urlPatterns = "/graphqlce")
 public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 
-	private static String url = "http://192.168.111.81:9080/wsi/FNCEWS40MTOM/";
+	private static final String OBJECT_STORE_NAME = "OS";
+	public static String url = "iiop://localhost:2809/FileNet/Engine"; //"http://192.168.111.82:9080/wsi/FNCEWS40MTOM/";
 	private static String userName = "p8admin";
-	private static String password = "WelkoM01";
+	private static String password = "Welkom01";
 	private static Connection connection;
 	
 	private static final long serialVersionUID = -2339152187358224158L;
@@ -72,10 +62,10 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
        UserContext.get().pushSubject(getBootstrapSubject());
        try {
 
-		   System.err.println( "Generating schema...");
+		   System.out.println( "Generating schema...");
 		   
 	       Domain domain = Factory.Domain.fetchInstance(connection, null, null);
-		   ObjectStore objectStore = Factory.ObjectStore.fetchInstance(domain, "TARGET", null);
+		   ObjectStore objectStore = Factory.ObjectStore.fetchInstance(domain, OBJECT_STORE_NAME, null);
 
 		   SchemaClassDefinition classDefinition = new SchemaClassDefinition(objectStore);
 		   
@@ -124,7 +114,7 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 	                		.type(folderType)
 	                		.argument(pathArgument)
 	                		.argument(idArgument)
-	                        .dataFetcher( new IndependentObjectDataFetcher("Folder") )
+	                        .dataFetcher( new IndependentObjectDataFetcher(OBJECT_STORE_NAME, "Folder") )
 	                	      )
 	                .field(getDocumentTypeAsField(documentType, idArgument) )
 	                .field(getDocumentTypeAsField(emailType, idArgument) )
@@ -161,7 +151,7 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 				.name(documentType.getName() )
 				.type(documentType)
 				.argument(idArgument)
-				.dataFetcher( new IndependentObjectDataFetcher(documentType.getName()) );
+				.dataFetcher( new IndependentObjectDataFetcher(OBJECT_STORE_NAME, documentType.getName()) );
 	}
 
 	protected static Subject getBootstrapSubject() {

@@ -23,8 +23,6 @@ import graphql.servlet.GraphQLServletListener;
  */
 public class ContentEngineSessionManager {
 
-	private static String url = "http://192.168.111.81:9080/wsi/FNCEWS40MTOM/";
-	
 	public static GraphQLServletListener getListener() {
 
 		return new GraphQLServletListener() {
@@ -59,7 +57,7 @@ public class ContentEngineSessionManager {
 					String username = environment.getArgument("username");
 					String password = environment.getArgument("password");
 			
-					Connection connection = Factory.Connection.getConnection(url);
+					Connection connection = Factory.Connection.getConnection(ContentEngineEndpoint.url);
 				    Subject subject = UserContext.createSubject(connection, username, password, null );
 				    
 				    session.setAttribute("Connection", connection);

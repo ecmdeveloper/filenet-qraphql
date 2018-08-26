@@ -12,8 +12,10 @@ import graphql.schema.DataFetchingEnvironment;
 public class IndependentObjectDataFetcher  implements DataFetcher<IndependentObject> {
 
 	private final String className;
-
-	public IndependentObjectDataFetcher(String className) {
+	private final String objectStoreName;
+	
+	public IndependentObjectDataFetcher(String objectStoreName, String className) {
+		this.objectStoreName = objectStoreName;
 		this.className = className;
 	}
 	
@@ -21,7 +23,7 @@ public class IndependentObjectDataFetcher  implements DataFetcher<IndependentObj
 	public IndependentObject get(DataFetchingEnvironment environment) {
 		
 		ContentEngineContext context = environment.getContext();
-		ObjectStore objectStore = context.getObjectStore("TARGET");
+		ObjectStore objectStore = context.getObjectStore(objectStoreName);
 		Optional<String> pathOrId = getPathOrId(environment);
 		if ( pathOrId.isPresent()) {
 			return objectStore.fetchObject(className, pathOrId.get(), null);
