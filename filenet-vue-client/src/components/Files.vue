@@ -1,24 +1,24 @@
 <template>
   <v-layout row>
     <v-flex xs12 sm10 offset-sm1>
-      <v-card>
+       <v-card>
 
         <v-list two-line subheader>
           <v-subheader inset>Folders</v-subheader>
 
           <v-list-tile
-            v-for="item in items"
-            :key="item.title"
+            v-for="item in folder.subFolders"
+            :key="item.Name"
             avatar
             @click=""
           >
             <v-list-tile-avatar>
-              <v-icon :class="[item.iconClass]">{{ item.icon }}</v-icon>
+              <v-icon class='grey lighten-1 white--text'>folder</v-icon>
             </v-list-tile-avatar>
 
             <v-list-tile-content>
-              <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-              <v-list-tile-sub-title>{{ item.subtitle }}</v-list-tile-sub-title>
+              <v-list-tile-title>{{ item.Name }}</v-list-tile-title>
+              <v-list-tile-sub-title>{{ item.Creator }} | {{ item.DateCreated }}</v-list-tile-sub-title>
             </v-list-tile-content>
 
             <v-list-tile-action>
@@ -60,19 +60,50 @@
 </template>
 
 <script>
+
+  import { FOLDER_CONTENT } from '../constants/graphql'
+
   export default {
     data () {
       return {
-        items: [
-          { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Photos', subtitle: 'Jan 9, 2014' },
-          { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Recipes', subtitle: 'Jan 17, 2014' },
-          { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Work', subtitle: 'Jan 28, 2014' },
-          { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Work', subtitle: 'Jan 28, 2014' }
+        folder: [
+          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Photos', subtitle: 'Jan 9, 2014' },
+          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Recipes', subtitle: 'Jan 17, 2014' },
+          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Work', subtitle: 'Jan 28, 2014' },
+          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Work2', subtitle: 'Jan 28, 2014' }
         ],
         items2: [
           { icon: 'assignment', iconClass: 'blue white--text', title: 'Vacation itinerary', subtitle: 'Jan 20, 2014' },
           { icon: 'call_to_action', iconClass: 'amber white--text', title: 'Kitchen remodel', subtitle: 'Jan 10, 2014' }
         ]
+      }
+    },
+    apollo: {
+      folder: {
+        query: FOLDER_CONTENT,
+        variables: {
+          path: "/"
+        }
+      }
+    },
+    methods: {
+      refresh() {
+        this.alert = false;
+        this.$apollo.query({
+          query: FOLDER_CONTENT,
+          variables: {
+            path: "/"
+          }
+        }).then((data) => {
+          // Result
+          console.log(data);
+          this.items = data.subFolder;
+        }).catch((error) => {
+          // Error
+          console.error(error)
+          this.alert = true;
+          this.errorMessage = error;
+        });
       }
     }
   }
