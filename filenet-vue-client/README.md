@@ -36,3 +36,5 @@ npm install --save graphql@0.12.3
 ### Starting Chrome in same origin mode:
 
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --disable-web-security --user-data-dir
+
+From: https://stackoverflow.com/questions/38786683/chrome-disable-web-security-same-origin-policy-no-more-working

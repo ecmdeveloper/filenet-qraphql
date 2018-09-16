@@ -15,9 +15,10 @@
             <v-list-tile-avatar>
               <v-icon class='grey lighten-1 white--text'>folder</v-icon>
             </v-list-tile-avatar>
-
             <v-list-tile-content>
-              <v-list-tile-title>{{ item.Name }}</v-list-tile-title>
+              <router-link :to="{ name: 'Files', params: {path: item.PathName} }">
+                <v-list-tile-title>{{ item.Name }}</v-list-tile-title>
+              </router-link>
               <v-list-tile-sub-title>{{ item.Creator }} | {{ item.DateCreated }}</v-list-tile-sub-title>
             </v-list-tile-content>
 
@@ -26,6 +27,7 @@
                 <v-icon color="grey lighten-1">info</v-icon>
               </v-btn>
             </v-list-tile-action>
+
           </v-list-tile>
 
           <v-divider inset></v-divider>
@@ -64,6 +66,7 @@
   import { FOLDER_CONTENT } from '../constants/graphql'
 
   export default {
+
     data () {
       return {
         folder: [
@@ -81,29 +84,11 @@
     apollo: {
       folder: {
         query: FOLDER_CONTENT,
-        variables: {
-          path: "/"
-        }
-      }
-    },
-    methods: {
-      refresh() {
-        this.alert = false;
-        this.$apollo.query({
-          query: FOLDER_CONTENT,
-          variables: {
-            path: "/"
+        variables() {
+          return {
+            path: this.$route.params.path === "root" ? "/" : this.$route.params.path
           }
-        }).then((data) => {
-          // Result
-          console.log(data);
-          this.items = data.subFolder;
-        }).catch((error) => {
-          // Error
-          console.error(error)
-          this.alert = true;
-          this.errorMessage = error;
-        });
+        }
       }
     }
   }

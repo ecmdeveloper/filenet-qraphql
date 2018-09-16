@@ -53,7 +53,7 @@
           console.log(data);
           console.log("Hier:" + data.data.logon);
           localStorage.setItem("sessionKey", data.data.logon);
-          this.$router.push({path:'/files'})
+          this.$router.push({path:'/files/%2F'})
         }).catch((error) => {
           // Error
           console.error(error)

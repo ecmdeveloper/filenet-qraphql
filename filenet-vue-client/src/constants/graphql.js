@@ -11,6 +11,7 @@ query FolderContent($path: String!) {
   folder(path: $path) {
     subFolders {
       Name
+      PathName
       Creator
       DateCreated
       ClassName
