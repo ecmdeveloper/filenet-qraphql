@@ -9,6 +9,7 @@ mutation Login($username: String!, $password: String!) {
 export const FOLDER_CONTENT = gql`
 query FolderContent($path: String!) {
   folder(path: $path) {
+    PathName
     subFolders {
       Name
       PathName

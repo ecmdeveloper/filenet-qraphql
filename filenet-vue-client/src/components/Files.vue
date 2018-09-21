@@ -4,6 +4,17 @@
        <v-card>
 
         <v-list two-line subheader>
+
+          <v-breadcrumbs>
+            <v-breadcrumbs-item
+              v-for="item in breadcrumbPath"
+              :key="item.path"
+              :to="{ name: 'Files', params: {path: item.path} }"
+            >
+              {{ item.name }}
+            </v-breadcrumbs-item>
+          </v-breadcrumbs>
+
           <v-subheader inset>Folders</v-subheader>
 
           <v-list-tile
@@ -69,16 +80,28 @@
 
     data () {
       return {
-        folder: [
-          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Photos', subtitle: 'Jan 9, 2014' },
-          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Recipes', subtitle: 'Jan 17, 2014' },
-          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Work', subtitle: 'Jan 28, 2014' },
-          // { icon: 'folder', iconClass: 'grey lighten-1 white--text', title: 'Work2', subtitle: 'Jan 28, 2014' }
-        ],
+        folder: [],
         items2: [
           { icon: 'assignment', iconClass: 'blue white--text', title: 'Vacation itinerary', subtitle: 'Jan 20, 2014' },
           { icon: 'call_to_action', iconClass: 'amber white--text', title: 'Kitchen remodel', subtitle: 'Jan 10, 2014' }
         ]
+      }
+    },
+    computed: {
+      breadcrumbPath: function () {
+
+        var pathName = this.$data.folder.PathName || "";
+        if ( pathName === "/") {
+          return [{ name: "Root", path: "/"}];
+        }
+
+        const parts = pathName.split('/');
+        var currentPath = "";
+
+        return parts.map( function(item, index) {
+            currentPath += "/" + item;
+            return {name: (index === 0 ? "Root" : item ), path: currentPath };
+        });
       }
     },
     apollo: {
