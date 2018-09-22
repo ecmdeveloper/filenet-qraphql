@@ -17,6 +17,11 @@ query FolderContent($path: String!) {
       DateCreated
       ClassName
     }
+    containedDocuments {
+      Name
+      Creator
+      DateCreated
+    }
   }
 }
 `

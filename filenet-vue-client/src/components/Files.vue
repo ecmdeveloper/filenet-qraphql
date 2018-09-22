@@ -15,7 +15,7 @@
             </v-breadcrumbs-item>
           </v-breadcrumbs>
 
-          <v-subheader inset>Folders</v-subheader>
+          <v-subheader inset v-if="folder.subFolders.length !== 0">Folders</v-subheader>
 
           <v-list-tile
             v-for="item in folder.subFolders"
@@ -30,7 +30,7 @@
               <router-link :to="{ name: 'Files', params: {path: item.PathName} }">
                 <v-list-tile-title>{{ item.Name }}</v-list-tile-title>
               </router-link>
-              <v-list-tile-sub-title>{{ item.Creator }} | {{ item.DateCreated }}</v-list-tile-sub-title>
+              <v-list-tile-sub-title>Created by: {{ item.Creator }} | Created on: {{ (new Date(item.DateCreated)).toLocaleDateString() }}</v-list-tile-sub-title>
             </v-list-tile-content>
 
             <v-list-tile-action>
@@ -43,21 +43,22 @@
 
           <v-divider inset></v-divider>
 
-          <v-subheader inset>Files</v-subheader>
+          <v-subheader inset v-if="folder.containedDocuments.length !== 0">Files</v-subheader>
+          <v-subheader inset v-else>Folder is empty</v-subheader>
 
           <v-list-tile
-            v-for="item in items2"
-            :key="item.title"
+            v-for="item in folder.containedDocuments"
+            :key="item.Name"
             avatar
             @click=""
           >
             <v-list-tile-avatar>
-              <v-icon :class="[item.iconClass]">{{ item.icon }}</v-icon>
+              <v-icon class="blue white--text">image</v-icon>
             </v-list-tile-avatar>
 
             <v-list-tile-content>
-              <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-              <v-list-tile-sub-title>{{ item.subtitle }}</v-list-tile-sub-title>
+              <v-list-tile-title>{{ item.Name }}</v-list-tile-title>
+              <v-list-tile-sub-title>Created by: {{ item.Creator }} | Created on: {{ (new Date(item.DateCreated)).toLocaleDateString() }}</v-list-tile-sub-title>
             </v-list-tile-content>
 
             <v-list-tile-action>
@@ -80,11 +81,7 @@
 
     data () {
       return {
-        folder: [],
-        items2: [
-          { icon: 'assignment', iconClass: 'blue white--text', title: 'Vacation itinerary', subtitle: 'Jan 20, 2014' },
-          { icon: 'call_to_action', iconClass: 'amber white--text', title: 'Kitchen remodel', subtitle: 'Jan 10, 2014' }
-        ]
+        folder: []
       }
     },
     computed: {
