@@ -11,13 +11,13 @@
 </template>
 
 <script>
-import Files from './components/Files.vue'
+import FolderContent from './components/FolderContent.vue'
 import Login from './components/Login.vue'
 
 export default {
   name: 'app',
   components: {
-    Files,
+    FolderContent,
     Login
   }
 }

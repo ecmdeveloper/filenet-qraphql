@@ -1,7 +1,7 @@
 import Login from './components/Login.vue';
-import Files from './components/Files.vue';
+import FolderContent from './components/FolderContent.vue';
 
 export const routes = [
   {path: '', component: Login },
-  {path: '/files/:path', name: "Files", component: Files }
+  {path: '/files/:path', name: "FolderContent", component: FolderContent }
 ];
