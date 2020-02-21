@@ -9,9 +9,11 @@ import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLInterfaceType.newInterface;
 import static graphql.schema.GraphQLObjectType.newObject;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -163,5 +165,16 @@ public class ContentEngineEndpoint extends SimpleGraphQLServlet {
 	@Override
 	protected GraphQLContext createContext(Optional<HttpServletRequest> request, Optional<HttpServletResponse> response) {
 		return new ContentEngineContext(request, response);
-	}      
+	}
+
+//	@Override
+//	protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+//		System.out.println("====> doOptions()");
+//		response.setHeader("Access-Control-Allow-Origin", "*");
+//	    response.setHeader("Access-Control-Allow-Methods", "GET, POST");
+//	    response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+//	    response.setHeader("Access-Control-Max-Age", "86400");
+//	    //Tell the browser what requests we allow.
+//	    response.setHeader("Allow", "GET, HEAD, POST, TRACE, OPTIONS");		
+//	}      
 }
